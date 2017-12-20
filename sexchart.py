@@ -161,7 +161,7 @@ def parse_sexchart(sc):
     directions = [find_leftright, find_ups, find_downs]
     ret = defaultdict(list)
     for i in range(len(sc)):
-        nicks = re.findall('[\d\w!@#]+', sc[i])
+        nicks = re.findall(NICK_RGX, sc[i])
         for nick in nicks:
             j = sc[i].find(nick)
             for direction in directions:
