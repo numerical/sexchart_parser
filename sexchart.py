@@ -4,7 +4,7 @@ from collections import defaultdict
 
 logging.basicConfig(level=logging.DEBUG)
 
-NICK_RGX = '[\d\w!@#]+'
+NICK_RGX = '[\d\w!@#$*^\[\]]+'
 
 testcase = \
     '''
@@ -56,7 +56,7 @@ def follow(sc, i, j, d):
             return follow(sc, i + 1, j, 'down')
         elif cur in {"'", '`'}:
             return follow(sc, i, j, 'up')
-        elif cur == ' ':
+        elif cur == ' ' or re.match(NICK_RGX, cur):
             logging.debug(f'Found nick left at {i},{j}: {sc[i][:j]}')
             return re.findall(f'{NICK_RGX}$', sc[i][:j]).pop()
         else:
@@ -68,7 +68,7 @@ def follow(sc, i, j, d):
             return follow(sc, i + 1, j, 'down')
         elif cur in {"'", '`'}:
             return follow(sc, i, j, 'up')
-        elif cur == ' ':
+        elif cur == ' ' or re.match(NICK_RGX, cur):
             logging.debug(f'Found nick right at {i},{j}: "{sc[i][j + 1:]}"')
             return re.findall(f'^{NICK_RGX}', sc[i][j + 1:]).pop()
         else:
@@ -116,13 +116,14 @@ def find_leftright(sc, nick, i, j):
     '''Check left lover for nick starting at i,j'''
     # check left
     ret = list()
-    if re.search(f'- {nick}', sc[i]):
+    logging.debug(f'Leftright check on line {i} for {nick}')
+    if re.search(f'- {re.escape(nick)}', sc[i]):
         start = j - 2
         d = 'left'
         lover = follow(sc, i, start, d)
         if lover:
             ret.append(lover)
-    if re.search(f'{nick} -', sc[i]):
+    if re.search(f'{re.escape(nick)} -', sc[i]):
         start = j + len(nick) + 2
         d = 'right'
         lover = follow(sc, i, start, d)
@@ -173,7 +174,7 @@ def parse_sexchart(sc):
 
 def clean_sexchart(sc):
     sc = sc.strip('\n').split('\n')
-    m = max(map(len, sc))
+    m = max(map(len, sc)) + 1
     return [format(s, f'<{m}') for s in sc]
 
 
